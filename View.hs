@@ -23,8 +23,8 @@ addInlineCoffeeScript = tell . S.singleton . Internal CoffeeScript
 addJavascript = tell . S.singleton . External JavaScript
 addInlineJavascript = tell . S.singleton . Internal JavaScript
 
-renderSite ::  Html -> View Html -> Html
-renderSite title view =
+renderSite ::  Html -> View Html -> IO Html
+renderSite title view = return $ 
   H.docTypeHtml $ do
     H.head $ H.title title `mappend` scripts `mappend` styles
     H.body $ body
