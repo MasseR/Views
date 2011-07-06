@@ -17,12 +17,8 @@ cacheDir = "js/cache"
 outOfDate :: FilePath -> IO Bool
 outOfDate = fmap not . isUpToDate
 isUpToDate :: FilePath -> IO Bool
-isUpToDate f = do
-  e <- (isFile f .&&. isFile (cacheFile f))
-  if not e
-     then return False
-     else liftM2 (>=) (getModified $ cacheFile f) (getModified f)
-
+isUpToDate f = (isFile f .&&. isFile (cacheFile f)) .&&.
+  liftM2 (>=) (getModified $ cacheFile f) (getModified f)
 
 cacheFile f = cacheDir </> (flip addExtension ".js" (dropExtension f))
 
