@@ -1,4 +1,4 @@
-module Coffee where
+module Coffee (cacheFile, compileFiles) where
 import System.FilePath ((</>), dropExtension, addExtension)
 import System.Directory (doesFileExist)
 import System.Posix.Files
@@ -6,10 +6,7 @@ import System.Process
 import Control.Monad.Error
 import System.Exit
 
-a .&&. b = do
-  a' <- a
-  b' <- b
-  return (a' && b')
+(.&&.)  = liftM2 (&&)
 
 isFile = doesFileExist
 
@@ -22,10 +19,7 @@ isUpToDate f = do
   e <- (isFile f .&&. isFile (cacheFile f))
   if not e
      then return False
-     else do
-       o <- getModified $ cacheFile f
-       c <- getModified f
-       return (o >= c)
+     else liftM2 (>=) (getModified $ cacheFile f) (getModified f)
 
 
 cacheFile f = cacheDir </> (flip addExtension ".js" (dropExtension f))
