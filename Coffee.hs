@@ -14,6 +14,8 @@ getModified f = modificationTime `fmap` getFileStatus f
 
 cacheDir = "js/cache"
 
+outOfDate :: FilePath -> IO Bool
+outOfDate = fmap not . isUpToDate
 isUpToDate :: FilePath -> IO Bool
 isUpToDate f = do
   e <- (isFile f .&&. isFile (cacheFile f))
@@ -32,4 +34,4 @@ compiler f = runErrorT $ do
        ExitFailure n -> throwError $ "Compile of file " ++ f ++ " failed with exit code(" ++ show n ++ "): " ++ err
 
 compileFiles ::  [FilePath] -> IO [Either String String]
-compileFiles xs = mapM compiler =<< filterM (fmap not . isUpToDate) xs
+compileFiles xs = mapM compiler =<< filterM outOfDate xs
