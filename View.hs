@@ -24,6 +24,16 @@ addInlineCoffeeScript = tell . S.singleton . Internal CoffeeScript
 addJavascript = tell . S.singleton . External JavaScript
 addInlineJavascript = tell . S.singleton . Internal JavaScript
 
+prepare :: Where -> Html
+prepare (External JavaScript uri) =
+  H.script mempty ! A.type_ "application/javascript" ! A.src (H.toValue uri)
+prepare (Internal JavaScript code) =
+  H.script (H.toHtml code) ! A.type_ "application/javascript"
+prepare (External CoffeeScript uri) =
+  prepare (External JavaScript (cacheFile uri))                               
+prepare (Internal CoffeeScript code) =
+  prepare (Internal JavaScript (cacheFile code))
+
 renderSite ::  Html -> View Html -> IO Html
 renderSite title view = do
   compileFiles $ S.toList $ S.map getURI $ S.filter isExternalCoffee heads
@@ -32,11 +42,7 @@ renderSite title view = do
       H.head $ H.title title `mappend` scripts `mappend` styles
       H.body $ body
     where
-      externaljs x = H.script mempty ! A.type_ "application/javascript" ! A.src x
-      inlinejs x = H.script x ! A.type_ "application/javascript"
-      scripts = S.fold (flip mappend . externaljs . H.toValue . getURI) mempty (S.filter isExternalJS heads) `mappend`
-                S.fold (flip mappend . inlinejs . H.toHtml . getInline) mempty (S.filter isInternalJS heads) `mappend`
-                S.fold (flip mappend . externaljs . H.toValue . cacheFile . getURI) mempty (S.filter isExternalCoffee heads)
+      scripts = S.fold (flip mappend . prepare) mempty heads
       styles = mempty
       (body, heads) = runWriter $ runView view
 
@@ -50,18 +56,10 @@ test = renderSite "Hello views" $ do
       H.p "This is a test on views"
 
 -- Filters
-isExternalJS (External JavaScript       _ ) = True
-isExternalJS                            _   = False
 isExternalCoffee (External CoffeeScript _ ) = True
 isExternalCoffee                        _   = False
-isExternalCss (External Css             _ ) = True
-isExternalCss                           _   = False
-isInternalJS (Internal JavaScript       _ ) = True
-isInternalJS                            _   = False
 isInternalCoffee (Internal CoffeeScript _ ) = True
 isInternalCoffee                        _   = False
-isInternalCss (Internal Css             _ ) = True
-isInternalCss                           _   = False
+
 -- Getters
-getURI (External _ x)    = x
-getInline (Internal _ x) = x
+getURI (External _ x) = x
