@@ -30,14 +30,14 @@ prepare (External JavaScript uri) =
 prepare (Internal JavaScript code) =
   H.script (H.toHtml code) ! A.type_ "application/javascript"
 prepare (External CoffeeScript uri) =
-  prepare (External JavaScript (cacheFile uri))                               
+  prepare (External JavaScript (cacheFile uri))
 prepare (Internal CoffeeScript code) =
   prepare (Internal JavaScript (cacheFile code))
 
 renderSite ::  Html -> View Html -> IO Html
 renderSite title view = do
   compileFiles $ S.toList $ S.map getURI $ S.filter isExternalCoffee heads
-  return $ 
+  return $
     H.docTypeHtml $ do
       H.head $ H.title title `mappend` scripts `mappend` styles
       H.body $ body
